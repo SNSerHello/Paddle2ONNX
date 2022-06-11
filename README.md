@@ -1,5 +1,14 @@
 # Paddle2ONNX
 
+## 在Linux下制作PaddleONNX的Wheel文件
+
+```
+$ sudo apt install libprotobuf-dev protobuf-compiler
+$ sudo pip3 install --upgrade -r requirements.txt
+$ python3 setup.py bdist_wheel --universal
+$ sudo pip3 install --upgrade dist/paddle2onnx-0.9.8rc0-cp38-cp38-linux_x86_64.whl
+```
+
 简体中文 | [English](README_en.md)
 
 ## 简介

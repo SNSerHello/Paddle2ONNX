@@ -162,6 +162,7 @@ class cmake_build(setuptools.Command):
                 '-DPYTHON_INCLUDE_DIR={}'.format(sysconfig.get_python_inc()),
                 '-DPYTHON_EXECUTABLE={}'.format(sys.executable),
                 '-DBUILD_PADDLE2ONNX_PYTHON=ON',
+                '-DONNX_USE_PROTOBUF_SHARED_LIBS=ON',
                 '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
                 '-DONNX_NAMESPACE={}'.format(ONNX_NAMESPACE),
                 '-DPY_EXT_SUFFIX={}'.format(

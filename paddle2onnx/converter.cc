@@ -17,6 +17,7 @@
 #include <iostream>
 #include <set>
 #include <string>
+#include <cstring>
 #include "paddle2onnx/mapper/exporter.h"
 
 namespace paddle2onnx {

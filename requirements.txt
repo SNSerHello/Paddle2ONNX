@@ -1,1 +1,17 @@
-onnx>=1.10.0
+onnx==1.9.0
+protobuf==3.20.1
+# 
+# Linux
+# 
+# sudo pip3 install --upgrade protobuf-compiler
+# src/core/lib/gpr/log_linux.cc:43:13: error: ambiguating new declaration of ‘long int gettid()’
+#      43 | static long gettid(void) { return syscall(__NR_gettid); }
+#         |             ^~~~~~
+# 
+# protobuf-compiler
+# 
+# SO: sudo apt install protobuf-compiler
+# 
+# Windows: refer to: https://sourceware.org/pub/pthreads-win32/dll-latest/
+#   pthread_atfork has not been implemented, so failed to generate protobuf-compiler
+# 
