@@ -21,19 +21,13 @@ import paddle
 import random
 
 op_api_map = {
-    "reduce_max": paddle.max,
-    "reduce_min": paddle.min,
-    "reduce_mean": paddle.mean,
-    "reduce_sum": paddle.sum,
-    "reduce_prod": paddle.prod,
+    "arg_min": paddle.argmin,
+    "arg_max": paddle.argmax,
 }
 
 opset_version_map = {
-    "reduce_max": [7, 9, 15],
-    "reduce_min": [7, 9, 15],
-    "reduce_mean": [7, 9, 15],
-    "reduce_sum": [7, 9, 15],
-    "reduce_prod": [7, 9, 15],
+    "arg_min": [7, 9, 15],
+    "arg_max": [7, 9, 15],
 }
 
 
@@ -47,21 +41,19 @@ class Net(BaseNet):
         forward
         """
         if self.config["tensor_attr"]:
-            axis = paddle.to_tensor(
-                self.config["dim"], dtype=self.config["axis_dtype"])
+            axis = paddle.assign(self.config["axis"])
         else:
-            axis = self.config["dim"]
-
+            axis = self.config["axis"]
         x = op_api_map[self.config["op_names"]](inputs,
                                                 axis=axis,
-                                                keepdim=self.config["keep_dim"])
-        x = paddle.unsqueeze(x, axis=[0])
+                                                keepdim=self.config["keep_dim"],
+                                                dtype=self.config["out_dtype"])
         return x
 
 
-class TestReduceAllConvert(OPConvertAutoScanTest):
+class TestArgMinMaxConvert(OPConvertAutoScanTest):
     """
-    api: paddle.fluid.layers.reduce_max/min/mean/sum/prod/
+    api: paddle.argmin/argmax
     OPset version: 7, 9, 15
     """
 
@@ -69,46 +61,34 @@ class TestReduceAllConvert(OPConvertAutoScanTest):
         input_shape = draw(
             st.lists(
                 st.integers(
-                    min_value=2, max_value=10), min_size=1, max_size=4))
+                    min_value=2, max_value=10), min_size=2, max_size=4))
 
         input_spec = [-1] * len(input_shape)
 
         dtype = draw(st.sampled_from(["float32", "float64", "int32", "int64"]))
-        axis_type = draw(st.sampled_from([
-            "list",
-            "int",
-        ]))
-        if axis_type == "int":
-            axes = draw(
-                st.integers(
-                    min_value=-len(input_shape), max_value=len(input_shape) -
-                    1))
-        elif axis_type == "list":
-            lenSize = random.randint(1, len(input_shape))
-            axes = []
-            for i in range(lenSize):
-                axes.append(random.choice([i, i - len(input_shape)]))
-            # paddle.max/min has a bug when aixs < 0
-            axes = [
-                axis + len(input_shape) if axis < 0 else axis
-                for i, axis in enumerate(axes)
-            ]
+
+        axis = draw(
+            st.integers(
+                min_value=-len(input_shape), max_value=len(input_shape) - 1))
+
         keep_dim = draw(st.booleans())
+
+        out_dtype = draw(st.sampled_from(["int32", "int64"]))
+
         tensor_attr = draw(st.booleans())
-        # Must be int64, otherwise cast will be added after const and the value cannot be obtained
-        axis_dtype = draw(st.sampled_from(["int64"]))
+
         config = {
             "op_names": ["reduce_max"],
             "test_data_shapes": [input_shape],
             "test_data_types": [[dtype]],
             "opset_version": [7, 9, 15],
-            "dim": axes,
+            "axis": axis,
+            "out_dtype": out_dtype,
             "keep_dim": keep_dim,
+            "tensor_attr": tensor_attr,
             "input_spec_shape": [],
             "delta": 1e-4,
-            "rtol": 1e-4,
-            "tensor_attr": tensor_attr,
-            "axis_dtype": axis_dtype
+            "rtol": 1e-4
         }
 
         models = list()
@@ -116,14 +96,11 @@ class TestReduceAllConvert(OPConvertAutoScanTest):
         opset_versions = list()
         for op_name, i in op_api_map.items():
             config["op_names"] = op_name
-            if op_name == "reduce_mean":
-                dtype_mean = draw(st.sampled_from(["float32", "float64"]))
-                config["test_data_types"] = [[dtype_mean]]
             models.append(Net(config))
             op_names.append(op_name)
             opset_versions.append(opset_version_map[op_name])
-            config["op_names"] = op_names
-            config["opset_version"] = opset_versions
+        config["op_names"] = op_names
+        config["opset_version"] = opset_versions
 
         return (config, models)
 
