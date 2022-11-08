@@ -66,6 +66,7 @@ paddle2onnx --model_dir saved_inference_model \
 |--deploy_backend |**[可选]** 量化模型部署的推理引擎，支持 onnxruntime、tensorrt 或 others，当选择 others 时，所有的量化信息存储于 max_range.txt 文件中，默认为 onnxruntime |
 |--save_calibration_file |**[可选]** TensorRT 8.X版本部署量化模型需要读取的 cache 文件的保存路径，默认为 calibration.cache |
 |--version |**[可选]** 查看 paddle2onnx 版本 |
+|--external_filename |**[可选]** 当导出的ONNX模型大于 2G 时，需要设置 external data 的存储路径，推荐设置为：external_data |
 
 - 使用 onnxruntime 验证转换模型, 请注意安装最新版本（最低要求 1.10.0）
 
@@ -83,7 +84,7 @@ python -m paddle2onnx.optimize --input_model model.onnx \
                                --input_shape_dict "{'x':[1,3,224,224]}"
 ```
 
-3. 如果需要裁剪 Paddle 模型，或者需要固化或修改 Paddle 模型输入 Shape，请使用如下工具：[Paddle 相关工具](./tools/paddle/README.md)
+3. 如果你有裁剪 Paddle 模型，固化或修改 Paddle 模型输入 Shape 或者合并 Paddle 模型的权重文件等需求，请使用如下工具：[Paddle 相关工具](./tools/paddle/README.md)
 
 4. 如果你需要裁剪 ONNX 模型或者修改 ONNX 模型，请参考如下工具：[ONNX 相关工具](./tools/onnx/README.md)
 

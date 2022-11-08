@@ -22,6 +22,20 @@
 #include "paddle2onnx/mapper/quantize_helper.h"
 #include "paddle2onnx/parser/parser.h"
 
+#ifdef _MSC_VER
+#define PATH_SEP "\\"
+#else
+#define PATH_SEP "/"
+#endif
+
+inline std::string GetFilenameFromPath(const std::string& path) {
+  auto pos = path.find_last_of(PATH_SEP);
+  if (pos == std::string::npos) {
+    return path;
+  }
+  return path.substr(pos + 1);
+}
+
 namespace paddle2onnx {
 
 struct ModelExporter {
@@ -29,6 +43,8 @@ struct ModelExporter {
   std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>> parameters;
   std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> inputs;
   std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> outputs;
+  // The _deploy_backend will pass to Mapper to influence the conversion
+  std::string _deploy_backend = "onnxruntime";
   OnnxHelper _helper;
   int32_t _total_ops_num = 0;
   int32_t _current_exported_num = 0;
@@ -37,7 +53,7 @@ struct ModelExporter {
                         bool use_initializer = false);
 
   // Update constant node in parameters. When process quantize model, the weight
-  // dtype may be int8, it should be convet to float32 and use this func to
+  // dtype may be int8, it should be convet to float32 and use this function to
   // update converted params.
   void UpdateParameters(const std::map<std::string, Weight>& params);
   void ExportInputOutputs(const std::vector<TensorInfo>& input_infos,
@@ -83,13 +99,22 @@ struct ModelExporter {
                           std::set<std::string>* unsupported_ops,
                           bool enable_experimental_op);
 
+  void SaveExternalData(::paddle2onnx::GraphProto* graph,
+                        const std::string& external_file_path,
+                        bool* save_external = nullptr);
+
+  void ONNXChecker(const ONNX_NAMESPACE::ModelProto& model,
+                   const bool& verbose);
+
   std::string Run(const PaddleParser& parser, int opset_version = 9,
                   bool auto_upgrade_opset = true, bool verbose = false,
                   bool enable_onnx_checker = true,
                   bool enable_experimental_op = false,
                   bool enable_optimize = true,
                   const std::string& deploy_backend = "onnxruntime",
-                  std::string* calibration_cache = nullptr);
+                  std::string* calibration_cache = nullptr,
+                  const std::string& external_file = "",
+                  bool* save_external = nullptr);
 };
 
 }  // namespace paddle2onnx

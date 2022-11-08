@@ -14,10 +14,19 @@
 
 #include "paddle2onnx/mapper/onnx_helper.h"
 
+#include <fstream>
+
 namespace paddle2onnx {
 
 void AddAttribute(std::shared_ptr<ONNX_NAMESPACE::NodeProto> node,
                   const std::string& name, const int64_t& value) {
+  for (int i = 0; i < node->attribute_size(); ++i) {
+    if (node->attribute(i).name() == name) {
+      node->mutable_attribute(i)->set_i(value);
+      node->mutable_attribute(i)->set_type(ONNX_NAMESPACE::AttributeProto::INT);
+      return;
+    }
+  }
   auto attr = node->add_attribute();
   attr->set_name(name);
   attr->set_i(value);
@@ -26,6 +35,13 @@ void AddAttribute(std::shared_ptr<ONNX_NAMESPACE::NodeProto> node,
 
 void AddAttribute(std::shared_ptr<ONNX_NAMESPACE::NodeProto> node,
                   const std::string& name, const float& value) {
+  for (int i = 0; i < node->attribute_size(); ++i) {
+    if (node->attribute(i).name() == name) {
+      node->mutable_attribute(i)->set_f(value);
+      node->mutable_attribute(i)->set_type(ONNX_NAMESPACE::AttributeProto::FLOAT);
+      return;
+    }
+  }
   auto attr = node->add_attribute();
   attr->set_name(name);
   attr->set_f(value);
@@ -152,7 +168,12 @@ std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto> MakeValueInfo(
   tensor_type_proto->set_elem_type(GetOnnxDtype(info.dtype));
   auto shape = tensor_type_proto->mutable_shape();
   for (auto& dim : info.shape) {
-    shape->add_dim()->set_dim_value(dim);
+    if (dim < 0) {
+      auto dynamic_dim_name = MapperHelper::Get()->GenName("DynamicDimension");
+      shape->add_dim()->set_dim_param(dynamic_dim_name);
+    } else {
+      shape->add_dim()->set_dim_value(dim);
+    }
   }
   return value_info;
 }
@@ -173,6 +194,10 @@ std::shared_ptr<ONNX_NAMESPACE::NodeProto> OnnxHelper::MakeNode(
   for (size_t i = 0; i < outputs.size(); ++i) {
     node->add_output(outputs[i]);
   }
+  if (op_type == "Reshape" && GetOpsetVersion() >= 14) {
+    AddAttribute(node, "allowzero", int64_t(0));
+  }
+
   nodes.push_back(node);
   return node;
 }
@@ -196,6 +221,9 @@ std::shared_ptr<ONNX_NAMESPACE::NodeProto> OnnxHelper::MakeNode(
   }
   for (size_t i = 0; i < outputs.size(); ++i) {
     node->add_output(outputs[i]);
+  }
+  if (op_type == "Reshape" && GetOpsetVersion() >= 14) {
+    AddAttribute(node, "allowzero", int64_t(0));
   }
   nodes.push_back(node);
   return node;
@@ -336,6 +364,9 @@ std::string OnnxHelper::Reshape(const std::string& input,
   } else {
     auto shape_node = Constant(ONNX_NAMESPACE::TensorProto::INT64, shape);
     auto node = MakeNode("Reshape", {input, shape_node}, {output});
+    if (opset_version >= 14) {
+      AddAttribute(node, "allowzero", int64_t(0));
+    }
   }
   return output;
 }
