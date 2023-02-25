@@ -13,35 +13,28 @@
 // limitations under the License.
 
 #pragma once
+#include <vector>
+
 #include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
 
-class RoiAlignMapper : public Mapper {
+class SoftmaxCrossEntropyLossMapper : public Mapper {
  public:
-  RoiAlignMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
-                 int64_t op_id)
+  SoftmaxCrossEntropyLossMapper(const PaddleParser& p, OnnxHelper* helper,
+                                int64_t block_id, int64_t op_id)
       : Mapper(p, helper, block_id, op_id) {
-    MarkAsExperimentalOp();
-    GetAttr("pooled_height", &pooled_height_);
-    GetAttr("pooled_width", &pooled_width_);
-    GetAttr("spatial_scale", &spatial_scale_);
-    GetAttr("sampling_ratio", &sampling_ratio_);
-    GetAttr("aligned", &aligned_);
+    GetAttr("axis", &axis_);
+    GetAttr("soft_label", &soft_label_);
+    GetAttr("ignore_index", &ignore_index_);
   }
-
-  int32_t GetMinOpset(bool verbose = false) {
-    Logger(verbose, 10) << RequireOpset(10) << std::endl;
-    return 10;
-  }
-  void Opset10();
+  int32_t GetMinOpset(bool verbose = false);
+  void Opset12();
 
  private:
-  int64_t pooled_height_;
-  int64_t pooled_width_;
-  float spatial_scale_;
-  int64_t sampling_ratio_;
-  bool aligned_;
+  int64_t axis_ = -1;
+  bool soft_label_ = false;
+  int64_t ignore_index_ = -100;
 };
 
 }  // namespace paddle2onnx

@@ -30,14 +30,14 @@ class Net(BaseNet):
         forward
         """
 
-        condition = paddle.fluid.layers.cast(inputs, 'bool')
-        x = paddle.fluid.layers.where(condition)
+        condition = paddle.cast(inputs, 'bool')
+        x = paddle.nonzero(condition)
         return x
 
 
 class TestWhereIndexConvert(OPConvertAutoScanTest):
     """
-    api: paddle.fluid.layers.where
+    api: paddle.nonzero
     OPset version: 9, 15
     """
 

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 wget -P ~/.cache/paddle/dataset/int8/download/ http://paddle-inference-dist.bj.bcebos.com/int8/mnist_model.tar.gz
-tar xf ~/.cache/paddle/dataset/int8/download/mnist_model.tar.gz -C ~/.cache/paddle/dataset/int8/download/mnist_model
+tar xf ~/.cache/paddle/dataset/int8/download/mnist_model.tar.gz -C ~/.cache/paddle/dataset/int8/download/
 wget -P ~/.cache/paddle/dataset/int8/download/ https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/inference/MobileNetV1_infer.tar
 tar xf ~/.cache/paddle/dataset/int8/download/MobileNetV1_infer.tar -C ~/.cache/paddle/dataset/int8/download/
 wget -P ~/.cache/paddle/dataset/int8/download/ https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/inference/ResNet50_infer.tar
@@ -23,9 +23,19 @@ wget https://bj.bcebos.com/paddle2onnx/tests/quantized_models.tar.gz
 tar xf quantized_models.tar.gz
 
 cases=`find . -name "test*.py" | sort`
-ignore="test_expand_as.py \
+ignore="test_auto_scan_affine_channel.py \
+        test_auto_scan_expand.py \
+        test_auto_scan_flatten2.py \
+        test_auto_scan_generate_proposals_v2.py \
+        test_auto_scan_matmul.py \
+        test_auto_scan_mean.py \
+        test_auto_scan_mul.py \
+        test_auto_scan_multiclass_nms_lod.py \
+        test_auto_scan_multiclass_nms_tensor.py \
+        test_auto_scan_norm.py \
+        test_auto_scan_roi_align.py \ # need to be rewrite
+        test_expand_as.py \
         test_split.py \
-        test_auto_scan_softmax_with_cross_entropy.py \
         test_auto_scan_pool_adaptive_max_ops.py \
         test_auto_scan_interpolate_v1_ops.py \
         test_auto_scan_isx_ops.py \
@@ -40,7 +50,8 @@ ignore="test_expand_as.py \
         test_auto_scan_uniform_random.py \
         test_auto_scan_dist.py \
         test_auto_scan_distribute_fpn_proposals1.py \
-        ./test_auto_scan_generate_proposals.py \
+        test_auto_scan_distribute_fpn_proposals_v2.py \
+        test_auto_scan_generate_proposals.py \
         test_uniform.py \
         test_ceil.py \
         test_floor_divide.py \

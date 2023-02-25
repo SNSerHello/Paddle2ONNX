@@ -18,11 +18,7 @@ import hypothesis.strategies as st
 import numpy as np
 import unittest
 import paddle
-
-op_api_map = {
-    "fill_any_like": paddle.ones_like,
-    "fill_zeros_like": paddle.zeros_like,
-}
+from onnxbase import randtool
 
 
 class Net(BaseNet):
@@ -30,45 +26,46 @@ class Net(BaseNet):
     simple Net
     """
 
-    def forward(self, x):
+    def forward(self, input, index):
         """
         forward
         """
-        x = op_api_map[self.config["op_names"]](x)
-        x = x.astype("int32")
+        x = paddle.index_sample(input, index=index)
         return x
 
 
-class TestFillLikeConvert(OPConvertAutoScanTest):
+class TestIndexSampleConvert(OPConvertAutoScanTest):
     """
-    api: paddle.ones_like && paddle.zeros_like
-    OPset version: 9, 13, 15
+    api: paddle.index_sample
+    OPset version: 11, 15
     """
 
     def sample_convert_config(self, draw):
         input_shape = draw(
             st.lists(
                 st.integers(
-                    min_value=10, max_value=20), min_size=1, max_size=4))
+                    min_value=2, max_value=20), min_size=2, max_size=2))
 
-        dtype = draw(
-            st.sampled_from(["bool", "int32", "int64", "float32", "float64"]))
+        dtype = draw(st.sampled_from(["float32", "float64", "int32", "int64"]))
+
+        index_dtype = draw(st.sampled_from(["int32", "int64"]))
+
+        def generator_data():
+            import random
+            n = random.randint(1, input_shape[1])
+            input_data = randtool("int", 0.0, input_shape[1] - 1,
+                                  [input_shape[0], n])
+            return input_data
 
         config = {
-            "op_names": "",
-            "test_data_shapes": [input_shape],
-            "test_data_types": [[dtype]],
-            "opset_version": [9, 13, 15],
+            "op_names": ["index_sample"],
+            "test_data_shapes": [input_shape, generator_data],
+            "test_data_types": [[dtype], [index_dtype]],
+            "opset_version": [11, 15],
             "input_spec_shape": [],
         }
 
-        models = list()
-        op_names = list()
-        for op_name, i in op_api_map.items():
-            config["op_names"] = op_name
-            models.append(Net(config))
-            op_names.append(op_name)
-        config["op_names"] = op_names
+        models = Net(config)
 
         return (config, models)
 
