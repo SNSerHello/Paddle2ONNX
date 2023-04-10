@@ -25,18 +25,17 @@ class Net(BaseNet):
     simple Net
     """
 
-    def forward(self, inputs):
+    def forward(self, input1, input2):
         """
         forward
         """
-        x = paddle.nn.functional.leaky_relu(
-            inputs, negative_slope=self.config["negative_slope"])
+        x = paddle.atan2(input1, input2)
         return x
 
 
-class TestLeakyreluConvert(OPConvertAutoScanTest):
+class TestUnsqueezeConvert(OPConvertAutoScanTest):
     """
-    api: paddle.nn.functional.leaky_relu
+    api: paddle.unsqueeze
     OPset version: 7, 9, 15
     """
 
@@ -44,18 +43,16 @@ class TestLeakyreluConvert(OPConvertAutoScanTest):
         input_shape = draw(
             st.lists(
                 st.integers(
-                    min_value=10, max_value=20), min_size=0, max_size=4))
+                    min_value=2, max_value=6), min_size=2, max_size=5))
 
-        dtype = draw(st.sampled_from(["float32"]))
-        negative_slope = draw(st.floats(min_value=0, max_value=1))
+        dtype = draw(st.sampled_from(["float32", "float64"]))
 
         config = {
-            "op_names": ["leaky_relu"],
-            "test_data_shapes": [input_shape],
-            "test_data_types": [[dtype]],
-            "opset_version": [7, 9, 15],
+            "op_names": ["atan2"],
+            "test_data_shapes": [input_shape, input_shape],
+            "test_data_types": [[dtype], [dtype]],
+            "opset_version": [9, 15],
             "input_spec_shape": [],
-            "negative_slope": negative_slope,
         }
 
         models = Net(config)

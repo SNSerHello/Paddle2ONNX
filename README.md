@@ -79,6 +79,7 @@ paddle2onnx --model_dir saved_inference_model \
 |--version |**[可选]** 查看 paddle2onnx 版本 |
 |--external_filename |**[可选]** 当导出的 ONNX 模型大于 2G 时，需要设置 external data 的存储路径，推荐设置为：external_data |
 |--export_fp16_model |**[可选]** 是否将导出的 ONNX 的模型转换为 FP16 格式，并用 ONNXRuntime-GPU 加速推理，默认为 False |
+|--custom_ops |**[可选]** 将 Paddle OP 导出为 ONNX 的 Custom OP，例如：--custom_ops '{"paddle_op":"onnx_op"}，默认为 {} |
 
 - 使用 onnxruntime 验证转换模型, 请注意安装最新版本（最低要求 1.10.0）
 
@@ -101,6 +102,12 @@ python -m paddle2onnx.optimize --input_model model.onnx \
 4. 如果你需要裁剪 ONNX 模型或者修改 ONNX 模型，请参考如下工具：[ONNX 相关工具](./tools/onnx/README.md)
 
 5. PaddleSlim 量化模型导出请参考：[量化模型导出ONNX](./docs/zh/quantize.md)
+
+### 使用VisualDL进行模型转换
+
+飞桨可视化工具VisualDL已经将模型转换工具部署在官网提供服务，可以点击[服务链接](https://www.paddlepaddle.org.cn/paddle/visualdl/modelconverter/)进行在线的Paddle2ONNX模型转换。
+
+![Paddle2ONNX](https://user-images.githubusercontent.com/22424850/226798785-33167569-4bd0-4b00-a5c0-5d6642cd6751.gif)
 
 ## License
 Provided under the [Apache-2.0 license](https://github.com/PaddlePaddle/paddle-onnx/blob/develop/LICENSE).
